@@ -49,6 +49,20 @@ so the project also runs offline / in CI / with zero API keys.
 - **Deterministic when seeded** (heuristic mode is byte-for-byte
   reproducible; LLM mode is reproducible up to provider variance).
 
+
+  <img width="600" alt="corruption_proxy" src="https://github.com/user-attachments/assets/f6127e60-0db6-4c34-a996-361dfde64c27" />
+
+  <img width="600" alt="num_active_laws" src="https://github.com/user-attachments/assets/d5959e29-70ce-4a1e-bc4e-ea216e1a08b5" />
+
+<img width="600"  alt="power_concentration" src="https://github.com/user-attachments/assets/0bdc1b80-07d7-4c51-901e-dd38dc598483" />
+
+<img width="600" alt="public_trust" src="https://github.com/user-attachments/assets/b004146e-51ed-43ef-a170-e8351982b702" />
+
+<img width="600" alt="num_active_laws" src="https://github.com/user-attachments/assets/06955b78-383b-4249-b6cb-a05ce6db8080" />
+
+<img width="600" alt="emergency_turns" src="https://github.com/user-attachments/assets/85d8bbcd-b605-423f-bf95-3891e4592c66" />
+
+
 ## Requirements
 
 - Python 3.10+ (target: 3.14)
