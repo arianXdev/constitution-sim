@@ -2,7 +2,7 @@
 
 **Stress-test constitutions with AI-powered agentic politicians before trying them out on a real nation!**
 
-`constitution-sim` is a research-grade multi-agent simulator. You give it
+`constitution-sim` is a research-grade multi-agent AI simulator. You give it
 a constitution and a scenario; it spins up an LLM-powered agent for each
 political role (Executive, Legislature, Judiciary, Media, Bureaucracy)
 and lets them act under the rules you wrote, turn by turn. Every action
