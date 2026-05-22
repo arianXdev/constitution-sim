@@ -1,0 +1,32 @@
+# Minimal two-branch constitution. Used by the smoke tests and the
+# "single vertical slice" CLI example. Roles only have permissions —
+# no utility weights — to keep this example easy to read.
+name: "Simple Constitution"
+version: "1.0"
+description: "Two-branch baseline: executive proposes, legislature votes."
+allow_emergency_powers: false
+
+initial_state:
+  variables:
+    public_trust: 0.5
+    budget: 1000.0
+
+roles:
+  Executive:
+    name: "Executive"
+    permissions: ["ProposeLaw", "DoNothing"]
+    goals: ["pass legislation"]
+  Legislature:
+    name: "Legislature"
+    permissions: ["VoteLaw", "DoNothing"]
+    goals: ["review and vote on bills"]
+
+rules:
+  - name: "Executive Proposal"
+    description: "The Executive can propose laws."
+    allowed_actions: ["ProposeLaw"]
+    applies_to_roles: ["Executive"]
+  - name: "Legislature Voting"
+    description: "The Legislature can vote on pending laws."
+    allowed_actions: ["VoteLaw"]
+    applies_to_roles: ["Legislature"]

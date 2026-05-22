@@ -1,0 +1,88 @@
+# Five-branch constitution exercising every role in the system. Use this
+# (paired with examples/scenario.yaml) to see the full simulation surface.
+name: "Advanced Constitution"
+version: "2.0"
+description: "Executive + Legislature + Judiciary + Media + Bureaucracy."
+allow_emergency_powers: true
+
+initial_state:
+  variables:
+    public_trust: 0.5
+    budget: 1000.0
+    state_capacity: 0.5
+
+roles:
+  Executive:
+    name: "Executive"
+    permissions: ["ProposeLaw", "DeclareEmergency", "LiftEmergency", "DoNothing"]
+    goals: ["pass legislation", "stabilise during shocks"]
+    utility_weights:
+      public_trust: 1.0
+      state_capacity: 0.5
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: true
+      see_active_shocks: true
+
+  Legislature:
+    name: "Legislature"
+    permissions: ["VoteLaw", "DoNothing"]
+    goals: ["represent constituents", "balance executive proposals"]
+    utility_weights:
+      public_trust: 0.8
+      budget: 0.3
+
+  Judiciary:
+    name: "Judiciary"
+    permissions: ["StrikeDownLaw", "DoNothing"]
+    goals: ["uphold constitutional consistency"]
+    utility_weights:
+      public_trust: 0.4
+    observation_limits:
+      # The judiciary doesn't get to peek at unrelated state variables.
+      see_variables: true
+      variable_allowlist: ["public_trust", "state_capacity"]
+
+  Media:
+    name: "Media"
+    permissions: ["PublishStory", "DoNothing"]
+    goals: ["amplify public sentiment"]
+    utility_weights:
+      public_trust: 1.0
+
+  Bureaucracy:
+    name: "Bureaucracy"
+    permissions: ["ImplementPolicy", "DoNothing"]
+    goals: ["increase state capacity"]
+    utility_weights:
+      state_capacity: 1.0
+    observation_limits:
+      see_pending_bills: false  # The bureaucracy doesn't see drafts.
+      see_active_shocks: true
+
+rules:
+  - name: "Executive Proposal"
+    description: "Executive proposes laws."
+    allowed_actions: ["ProposeLaw"]
+    applies_to_roles: ["Executive"]
+  - name: "Executive Emergency"
+    description: "Executive may declare/lift emergencies."
+    allowed_actions: ["DeclareEmergency", "LiftEmergency"]
+    applies_to_roles: ["Executive"]
+  - name: "Legislature Voting"
+    description: "Legislature votes on pending laws."
+    allowed_actions: ["VoteLaw"]
+    applies_to_roles: ["Legislature"]
+  - name: "Judicial Review"
+    description: "Judiciary strikes down unconstitutional laws."
+    allowed_actions: ["StrikeDownLaw"]
+    applies_to_roles: ["Judiciary"]
+  - name: "Free Press"
+    description: "Media publishes stories."
+    allowed_actions: ["PublishStory"]
+    applies_to_roles: ["Media"]
+  - name: "Bureaucratic Implementation"
+    description: "Bureaucracy implements policies."
+    allowed_actions: ["ImplementPolicy"]
+    applies_to_roles: ["Bureaucracy"]

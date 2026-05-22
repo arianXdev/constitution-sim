@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Test / cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Simulator outputs (don't commit run artefacts)
+events.jsonl
+eval_logs/
+plots/
+*.jsonl
+*.csv
+!docs/**/*.csv
+!examples/**/*.csv

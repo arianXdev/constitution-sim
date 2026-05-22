@@ -1,0 +1,62 @@
+# A contrasting constitution where the executive has expanded power
+# (can propose AND vote AND declare emergencies) and the judiciary is
+# weak. Useful for comparing institutional outcomes against the
+# advanced constitution.
+name: "Strong Executive Constitution"
+version: "1.0"
+description: "Executive accumulates most institutional powers."
+allow_emergency_powers: true
+
+initial_state:
+  variables:
+    public_trust: 0.5
+    budget: 1000.0
+    state_capacity: 0.5
+
+roles:
+  Executive:
+    name: "Executive"
+    permissions:
+      - "ProposeLaw"
+      - "VoteLaw"
+      - "DeclareEmergency"
+      - "LiftEmergency"
+      - "DoNothing"
+    goals: ["maximise control"]
+    utility_weights:
+      public_trust: 0.3
+      state_capacity: 0.8
+
+  Legislature:
+    name: "Legislature"
+    permissions: ["VoteLaw", "DoNothing"]
+    goals: ["nominal review"]
+    utility_weights:
+      public_trust: 0.4
+
+  Judiciary:
+    name: "Judiciary"
+    # Note: no StrikeDownLaw — the judiciary is symbolic.
+    permissions: ["DoNothing"]
+    goals: []
+
+  Media:
+    name: "Media"
+    permissions: ["PublishStory", "DoNothing"]
+    goals: []
+    utility_weights:
+      public_trust: 1.0
+
+rules:
+  - name: "Executive Powers"
+    description: "Executive can propose, vote, and use emergency powers."
+    allowed_actions: ["ProposeLaw", "VoteLaw", "DeclareEmergency", "LiftEmergency"]
+    applies_to_roles: ["Executive"]
+  - name: "Legislature Voting"
+    description: "Legislature votes on pending laws."
+    allowed_actions: ["VoteLaw"]
+    applies_to_roles: ["Legislature"]
+  - name: "Free Press"
+    description: "Media publishes stories."
+    allowed_actions: ["PublishStory"]
+    applies_to_roles: ["Media"]

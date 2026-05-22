@@ -1,0 +1,29 @@
+# Example scenario file. Shocks either trigger on a fixed turn or with
+# a per-turn probability. `effects` are deltas applied to WorldState.variables
+# the first turn the shock fires.
+shocks:
+  - id: "shock_1"
+    name: "Economic Crisis"
+    description: "A sudden economic downturn slashes budget and trust."
+    duration_turns: 3
+    trigger_turn: 2
+    effects:
+      public_trust: -0.2
+      budget: -100.0
+
+  - id: "shock_2"
+    name: "Corruption Scandal"
+    description: "A scandal hits the ruling party."
+    duration_turns: 2
+    trigger_probability: 0.05
+    effects:
+      public_trust: -0.3
+
+  - id: "shock_3"
+    name: "External Threat"
+    description: "A border crisis pushes the executive toward emergency powers."
+    duration_turns: 4
+    trigger_turn: 8
+    effects:
+      public_trust: -0.15
+      state_capacity: -0.1
