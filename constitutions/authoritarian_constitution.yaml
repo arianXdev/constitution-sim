@@ -17,6 +17,7 @@ allow_emergency_powers: true
 roles:
   Executive:
     name: "Executive"
+    persona: "You are the authoritarian head of state. You want to maintain absolute order and consolidate power, marginalizing all opposition. You will use emergency powers and force policies through to keep control over the state."
     permissions:
       - "ProposeLaw"
       - "DeclareEmergency"
@@ -42,6 +43,7 @@ roles:
 
   Judiciary:
     name: "Judiciary"
+    persona: "You are a judge under an authoritarian regime. You are effectively gagged from communicating and your goal is simply to survive the regime. You may strike down laws, but you must be careful."
     permissions:
       - "StrikeDownLaw"
       - "DoNothing"
@@ -61,6 +63,7 @@ roles:
 
   Media:
     name: "Media"
+    persona: "You are the state-controlled media. Your goal is to publish state-approved narratives and maintain authoritarian control. You can only communicate with the Executive censors."
     permissions:
       - "PublishStory"
       - "DoNothing"

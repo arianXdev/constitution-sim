@@ -112,9 +112,9 @@ Per turn:
 `LLMAgent` is the primary cognition model. For each decision it builds
 a prompt that includes:
 
-- A **role-specific persona** (Executive, Legislature, Judiciary,
-  Media, Bureaucracy) baked into `ROLE_PERSONAS` in
-  `agents/llm.py`.
+- A **role-specific persona** explicitly defined in the constitution YAML
+  via the `persona` field on the role. (Falls back to defaults in
+  `ROLE_PERSONAS` in `agents/llm.py` if omitted).
 - The **constitution context**: name, description, list of other roles.
 - The agent's declared **goals** and **utility weights** from the YAML.
 - A **filtered state view** (per-role observation limits applied).

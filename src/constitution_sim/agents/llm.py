@@ -119,6 +119,7 @@ class LLMAgent(BaseAgent):
         constitution_name: str = "(unnamed constitution)",
         constitution_description: str = "",
         other_roles: Optional[List[str]] = None,
+        persona: Optional[str] = None,
         memory_size: int = 5,
     ):
         super().__init__(agent_id, role_name)
@@ -129,6 +130,7 @@ class LLMAgent(BaseAgent):
         self.constitution_name = constitution_name
         self.constitution_description = constitution_description
         self.other_roles = [r for r in (other_roles or []) if r != role_name]
+        self.persona = persona
         self.memory: Deque[Tuple[int, str, bool]] = deque(maxlen=memory_size)
         self.fallback_agent = DeterministicHeuristicAgent(
             agent_id,
@@ -225,9 +227,12 @@ class LLMAgent(BaseAgent):
     # ----- prompt construction -------------------------------------------
 
     def _build_base_context(self, state_view: StateView) -> str:
-        persona = ROLE_PERSONAS.get(
-            self.role_name, "You are a political actor in a simulated state."
-        )
+        if self.persona:
+            persona = self.persona
+        else:
+            persona = ROLE_PERSONAS.get(
+                self.role_name, "You are a political actor in a simulated state."
+            )
         memory_block = self._render_memory()
         
         # Format recent actions (political history)

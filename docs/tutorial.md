@@ -186,10 +186,12 @@ rules:
 
 Knobs you can turn:
 
+- **`persona`**: an optional string that defines the exact system prompt
+  and worldview for the LLM agent playing this role.
 - **`permissions`**: which typed actions a role is allowed to propose.
   Drop `VoteLaw` from a role and they can't vote.
 - **`goals`** and **`utility_weights`**: shown to the LLM in its
-  persona. They tell the AI agent what it cares about.
+  prompt. They tell the AI agent what it cares about.
 - **`observation_limits`**: hide things from a role. Set
   `see_pending_bills: false` for the Bureaucracy and they'll never see
   bills.

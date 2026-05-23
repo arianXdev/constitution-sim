@@ -14,10 +14,12 @@ initial_state:
 roles:
   Executive:
     name: "Executive"
+    persona: "You are the head of state. You are politically ambitious and want to consolidate your agenda through legislation. You strongly value public_trust because a collapse means revolt, but you will use emergency powers if trust is destroyed. You do NOT vote on bills."
     permissions: ["ProposeLaw", "DoNothing"]
     goals: ["pass legislation"]
   Legislature:
     name: "Legislature"
+    persona: "You are a senior parliamentarian. You vote on the executive's bills. You represent constituents and are cautious about new laws, but you also do not want to look obstructionist. You vote against bills that lower public_trust; you vote for bills that raise state_capacity."
     permissions: ["VoteLaw", "DoNothing"]
     goals: ["review and vote on bills"]
 

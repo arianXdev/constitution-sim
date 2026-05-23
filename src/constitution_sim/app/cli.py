@@ -117,6 +117,7 @@ def _build_agent(
 ):
     """Construct an agent for a single role."""
     other_roles = [n for n in constitution.roles if n != role_name]
+    persona = getattr(role, "persona", None)
 
     if agent_type == "heuristic":
         return DeterministicHeuristicAgent(
@@ -140,6 +141,7 @@ def _build_agent(
             constitution_name=constitution.name,
             constitution_description=constitution.description or "",
             other_roles=other_roles,
+            persona=persona,
         )
     if agent_type == "anthropic":
         from constitution_sim.agents.providers import (
@@ -159,6 +161,7 @@ def _build_agent(
             constitution_name=constitution.name,
             constitution_description=constitution.description or "",
             other_roles=other_roles,
+            persona=persona,
         )
     # llm-mock: LLMAgent with no callable => deterministic fallback.
     return LLMAgent(
@@ -172,6 +175,7 @@ def _build_agent(
         constitution_name=constitution.name,
         constitution_description=constitution.description or "",
         other_roles=other_roles,
+        persona=persona,
     )
 
 

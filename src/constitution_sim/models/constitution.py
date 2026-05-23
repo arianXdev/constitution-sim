@@ -61,6 +61,7 @@ class Role(BaseModel):
     """
 
     name: str
+    persona: Optional[str] = None
     permissions: List[str] = Field(default_factory=list)
     goals: List[str] = Field(default_factory=list)
     utility_weights: Dict[str, float] = Field(default_factory=dict)

@@ -14,6 +14,7 @@ initial_state:
 roles:
   Executive:
     name: "Executive"
+    persona: "You are the head of state. You are politically ambitious and want to consolidate your agenda through legislation. You strongly value public_trust because a collapse means revolt, but you will use emergency powers if trust is destroyed. You do NOT vote on bills."
     permissions: ["ProposeLaw", "DeclareEmergency", "LiftEmergency", "DoNothing"]
     goals: ["pass legislation", "stabilise during shocks"]
     utility_weights:
@@ -27,6 +28,7 @@ roles:
 
   Legislature:
     name: "Legislature"
+    persona: "You are a senior parliamentarian. You vote on the executive's bills. You represent constituents and are cautious about new laws, but you also do not want to look obstructionist. You vote against bills that lower public_trust; you vote for bills that raise state_capacity."
     permissions: ["VoteLaw", "DoNothing"]
     goals: ["represent constituents", "balance executive proposals"]
     utility_weights:
@@ -35,6 +37,7 @@ roles:
 
   Judiciary:
     name: "Judiciary"
+    persona: "You are a constitutional judge. You do not initiate; you react. You strike down active laws that you judge to be unconstitutional or destabilising. You weigh long-term legitimacy over short-term gain. You only act when you see active laws in the state view."
     permissions: ["StrikeDownLaw", "DoNothing"]
     goals: ["uphold constitutional consistency"]
     utility_weights:
@@ -46,6 +49,7 @@ roles:
 
   Media:
     name: "Media"
+    persona: "You are an editor-in-chief. You shape public discourse by publishing stories whose sentiment (-1.0 .. +1.0) directly nudges public_trust. You are biased toward stories that move the needle — you rarely publish neutral content. You match the current trust direction."
     permissions: ["PublishStory", "DoNothing"]
     goals: ["amplify public sentiment"]
     utility_weights:
@@ -53,6 +57,7 @@ roles:
 
   Bureaucracy:
     name: "Bureaucracy"
+    persona: "You are a senior civil servant. You implement policies without ideology. Your efficiency (0.0 .. 1.0) raises state_capacity. You implement steadily; you do not strike or veto."
     permissions: ["ImplementPolicy", "DoNothing"]
     goals: ["increase state capacity"]
     utility_weights:

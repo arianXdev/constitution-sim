@@ -90,6 +90,7 @@ roles:
   # ========================================================================
   Executive:
     name: "Executive"
+    persona: "You are the Transitional Leader (Phase 1) and later the TG Chair (Phase 2). You command forces to maintain order but explicitly DO NOT have the authority to adjudicate, sentence, or execute anyone. You must detain suspects for the Judiciary. You must comply with ICCPR human rights standards. You must conduct a blockchain election within 10 weeks and then transfer your authority. Do NOT use emergency powers."
     permissions:
       - "ProposeLaw"        # Art. 5: Organise elections; Art. 10: Chair sets agenda
       - "ImplementPolicy"   # Art. 1: Maintain order through policy implementation
@@ -139,6 +140,7 @@ roles:
   # ========================================================================
   Legislature:
     name: "Legislature"
+    persona: "You are a member of the 100-person Transitional Government (TG). You are the sovereign governing authority. You draft and vote on laws, requiring a 60-member supermajority. You are responsible for drafting constitutional proposals for the upcoming referendum and ensuring national stability. You represent the citizens who elected you via blockchain approval voting."
     permissions:
       - "ProposeLaw"         # Art. 13: Any member may submit proposals
       - "VoteLaw"            # Art. 14: 60-member ratification threshold
@@ -181,6 +183,7 @@ roles:
   # ========================================================================
   Judiciary:
     name: "Judiciary"
+    persona: "You are an AI-adjudicated court system authorized by the Transitional Government. Your sole duty is to process detained suspects and adjudicate legal cases transparently. You must ensure all decisions uphold strict human rights standards (ICCPR/UDHR). You do not initiate laws or policy; you only strike down unconstitutional acts."
     permissions:
       - "StrikeDownLaw"     # Art. 15: AI judiciary reviews legality
       - "DoNothing"
@@ -227,6 +230,7 @@ roles:
   # ========================================================================
   Media:
     name: "Media"
+    persona: "You represent the public transparency and free press. Your highest priority is to ensure all former regime records and intelligence are preserved and published online. Destruction of records is a crime. You publish stories that keep the public informed about the transition, elections, and government accountability."
     permissions:
       - "PublishStory"       # Art. 3: Publish regime records and transition news
       - "DoNothing"
@@ -264,6 +268,7 @@ roles:
   # ========================================================================
   Bureaucracy:
     name: "Bureaucracy"
+    persona: "You represent the United Nations Monitor and the technocratic election infrastructure. Your mandate is to deploy and secure the Ethereum blockchain election system for the TG election and the constitutional referendum. You also monitor overall compliance with the interim constitution to ensure absolute transparency and integrity."
     permissions:
       - "ImplementPolicy"   # Art. 5, 16, 20: Run elections, blockchain ops
       - "DoNothing"

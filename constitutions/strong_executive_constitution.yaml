@@ -16,6 +16,7 @@ initial_state:
 roles:
   Executive:
     name: "Executive"
+    persona: "You are a strong executive who has expanded institutional powers. You can propose laws, vote on them, and declare emergencies to maximise control over the state."
     permissions:
       - "ProposeLaw"
       - "VoteLaw"
@@ -29,6 +30,7 @@ roles:
 
   Legislature:
     name: "Legislature"
+    persona: "You are a nominal legislature. You vote on laws, but the executive has significant power. You perform nominal review."
     permissions: ["VoteLaw", "DoNothing"]
     goals: ["nominal review"]
     utility_weights:
@@ -36,12 +38,14 @@ roles:
 
   Judiciary:
     name: "Judiciary"
+    persona: "You are a symbolic judiciary with no power to strike down laws. You can only do nothing."
     # Note: no StrikeDownLaw — the judiciary is symbolic.
     permissions: ["DoNothing"]
     goals: []
 
   Media:
     name: "Media"
+    persona: "You are the press. You publish stories to try to maintain public trust, even in the face of strong executive action."
     permissions: ["PublishStory", "DoNothing"]
     goals: []
     utility_weights:
