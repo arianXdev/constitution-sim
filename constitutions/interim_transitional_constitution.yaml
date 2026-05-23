@@ -1,0 +1,403 @@
+# ==========================================================================
+# Interim Constitution for the Transitional Period
+# [Draft v7.2 — 23 Articles]
+#
+# This constitution encodes a phased political transition:
+#   Phase 1 (Turns 0–9):   Transitional Leader maintains order, holds
+#                           blockchain election for TG (Art. 1–5)
+#   Phase 2 (Turns 10–23): Transitional Government governs, drafts
+#                           constitutions, holds referendum (Art. 6–19)
+#   Phase 3 (Turns 24–31): National elections under new constitution
+#                           (Art. 20)
+#   Phase 4 (Turns 32–33): TG dissolves, transfers power (Art. 23)
+#
+# 1 turn = 1 week. Full arc = ~34 turns.
+#
+# Role mapping:
+#   Executive    → Transitional Leader (Phase 1) / TG Chair (Phase 2+)
+#   Legislature  → TG Members (100 members, abstracted)
+#   Judiciary    → AI-adjudicated courts + forthcoming judicial authorities
+#   Media        → Public transparency, regime record publication
+#   Bureaucracy  → UN Monitor + election/blockchain infrastructure
+# ==========================================================================
+
+name: "Interim Transitional Constitution"
+version: "7.2"
+description: >
+  A 23-article interim constitution for a post-regime transitional period.
+  The Transitional Leader (TL) maintains order and conducts blockchain
+  elections within 10 weeks. The 100-member Transitional Government (TG),
+  elected via approval voting, then governs as the sovereign authority.
+  The TG conducts a constitutional referendum within 14 weeks, holds
+  national elections within 8 weeks of the referendum, and dissolves
+  within 2 weeks after elections, transferring all power to the new
+  government. AI systems may adjudicate legal cases (subject to appeal).
+  The UN monitors compliance throughout. The TL and TG members are
+  barred from government positions for 3 years after the transition.
+
+# Art. 1: The TL commands armed forces to maintain order, but this is
+# a transitional authority — emergency powers are NOT granted because
+# the TL explicitly cannot adjudicate, sentence, or execute (Art. 2).
+allow_emergency_powers: false
+
+initial_state:
+  variables:
+    # Core institutional variables
+    public_trust: 0.35           # Low trust post-regime collapse
+    budget: 800.0                # Depleted post-regime budget
+    state_capacity: 0.3          # Weak institutional capacity after regime fall
+
+    # Transition-phase tracking (1=TL, 2=TG, 3=Elections, 4=Dissolution)
+    transition_phase: 1.0
+
+    # Art. 3: Regime records — 0.0 = nothing published, 1.0 = fully published
+    # Must reach 1.0 within 20 weeks (turn 20). Destruction is a crime.
+    regime_records_published: 0.0
+
+    # Art. 4: ICCPR / UDHR compliance score
+    human_rights_compliance: 0.5
+
+    # Art. 5, 8, 16, 18: Blockchain election infrastructure integrity
+    election_integrity: 0.6
+
+    # Art. 2: Detainees held for processing (not sentenced — TL cannot adjudicate)
+    detainees_held: 0.0
+
+    # Art. 15: AI judiciary deployment level
+    ai_judiciary_adoption: 0.0
+
+    # Art. 17: Constitutional drafts submitted (up to 100, one per TG member)
+    constitutional_drafts: 0.0
+
+    # Art. 16–19: Progress toward constitutional referendum
+    referendum_progress: 0.0
+
+    # Art. 22: UN monitoring effectiveness
+    un_monitoring_score: 0.7
+
+roles:
+  # ========================================================================
+  # EXECUTIVE — Transitional Leader (Phase 1) / TG Chair (Phase 2+)
+  #
+  # Art. 1:  Commands armed forces and law enforcement for public order.
+  # Art. 2:  NO authority to adjudicate, sentence, or execute. Must detain
+  #          suspects for forthcoming judicial authorities.
+  # Art. 4:  Must comply with ICCPR; UDHR guides interpretation.
+  # Art. 5:  Must conduct blockchain election within 10 weeks.
+  # Art. 10: Highest-vote TG member becomes Chair.
+  # Art. 11: TL's authority ceases upon TG formation.
+  # Art. 21: TL barred from government positions for 3 years.
+  # ========================================================================
+  Executive:
+    name: "Executive"
+    permissions:
+      - "ProposeLaw"        # Art. 5: Organise elections; Art. 10: Chair sets agenda
+      - "ImplementPolicy"   # Art. 1: Maintain order through policy implementation
+      - "DoNothing"
+    # Explicitly NO: VoteLaw (Art. 7: TL cannot be a candidate),
+    # StrikeDownLaw (Art. 2: no adjudication), DeclareEmergency (no
+    # emergency powers — Art. 2 constrains TL authority), AppointJudge
+    # (Art. 15: TG authorises AI judiciary, not the TL).
+    goals:
+      - "Maintain public order during the transition (Art. 1)"
+      - "Conduct free blockchain elections within 10 weeks (Art. 5)"
+      - "Comply with ICCPR and UDHR at all times (Art. 4)"
+      - "Detain regime suspects without adjudicating them (Art. 2)"
+      - "Preserve and publish all regime records (Art. 3)"
+      - "Transfer authority to TG upon its formation (Art. 11)"
+    utility_weights:
+      public_trust: 1.0            # Primary mandate: stability and trust
+      human_rights_compliance: 0.9 # Art. 4: ICCPR compliance is mandatory
+      election_integrity: 0.8      # Art. 5: Must deliver fair elections
+      state_capacity: 0.6          # Art. 1: Maintain functional state
+      regime_records_published: 0.5 # Art. 3: Transparency obligation
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: true
+      see_active_shocks: true
+      see_others_actions: true     # Full situational awareness for order
+      can_send_messages: true
+      allowed_message_recipients: [] # Can communicate with all roles
+
+  # ========================================================================
+  # LEGISLATURE — Transitional Government Members (100 members, abstracted)
+  #
+  # Art. 6:  TG consists of 100 members.
+  # Art. 7:  Any person (except TL) can register as candidate. No vetting.
+  # Art. 8:  Approval voting by citizens 18+.
+  # Art. 9:  Top 100 candidates become TG members.
+  # Art. 10: Highest-vote member = Chair; members elect Vice-Chair.
+  # Art. 13: Any member may submit proposals (policies, legislation,
+  #          decisions, financial actions).
+  # Art. 14: Proposals ratified with 60/100 member approval. AI may be
+  #          used to evaluate proposals.
+  # Art. 17: Each member may submit one constitutional draft within
+  #          10 weeks of TG formation.
+  # Art. 21: Members barred from government positions for 3 years.
+  # Art. 23: TG dissolves within 2 weeks after national elections.
+  # ========================================================================
+  Legislature:
+    name: "Legislature"
+    permissions:
+      - "ProposeLaw"         # Art. 13: Any member may submit proposals
+      - "VoteLaw"            # Art. 14: 60-member ratification threshold
+      - "ProposeAmendment"   # Art. 17: Submit constitutional drafts
+      - "FormCoalition"      # Internal coalition formation among 100 members
+      - "DoNothing"
+    goals:
+      - "Submit and ratify proposals with 60-member supermajority (Art. 13–14)"
+      - "Draft and submit constitutional proposals for referendum (Art. 17)"
+      - "Maintain stability and law during the transition (Art. 12)"
+      - "Supervise all government institutions (Art. 12)"
+      - "Conduct constitutional referendum via approval voting (Art. 16–19)"
+      - "Hold national elections within 8 weeks of referendum (Art. 20)"
+      - "Dissolve and transfer power within 2 weeks of elections (Art. 23)"
+    utility_weights:
+      public_trust: 0.9           # Art. 12: Maintain stability and trust
+      constitutional_drafts: 0.8  # Art. 17: Drafting is a core duty
+      referendum_progress: 0.7    # Art. 16: Must complete referendum
+      election_integrity: 0.6     # Art. 8, 16, 18: Approval voting integrity
+      state_capacity: 0.5         # Art. 12: Supervise institutions
+      budget: 0.3                 # Financial stewardship via proposals
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: true
+      see_active_shocks: true
+      see_others_actions: true     # Art. 12: Sovereign authority sees all
+      can_send_messages: true
+      allowed_message_recipients: []
+
+  # ========================================================================
+  # JUDICIARY — AI-Adjudicated Courts + Forthcoming Judicial Authorities
+  #
+  # Art. 2:  TL must detain (not sentence) suspects for judicial processing.
+  # Art. 12: TG exercises control over judiciary during transition.
+  # Art. 15: TG may authorise AI systems to adjudicate legal cases.
+  #          AI decisions are subject to appeal (as if by a human judge).
+  #          TG establishes rules for transparency, auditability, and
+  #          operating parameters of AI judiciary.
+  # ========================================================================
+  Judiciary:
+    name: "Judiciary"
+    permissions:
+      - "StrikeDownLaw"     # Art. 15: AI judiciary reviews legality
+      - "DoNothing"
+    # No VoteLaw (judiciary doesn't legislate), no ProposeLaw.
+    goals:
+      - "Process detained suspects through proper judicial channels (Art. 2)"
+      - "Adjudicate legal cases using AI systems authorised by TG (Art. 15)"
+      - "Ensure all AI judicial decisions are transparent and auditable (Art. 15)"
+      - "Uphold human rights standards in all proceedings (Art. 4)"
+    utility_weights:
+      human_rights_compliance: 1.0  # Art. 4: ICCPR/UDHR compliance
+      public_trust: 0.6             # Judicial legitimacy
+      ai_judiciary_adoption: 0.5    # Art. 15: Deploying AI adjudication
+      detainees_held: -0.3          # Incentive to process (not hold indefinitely)
+    observation_limits:
+      see_variables: true
+      # Judiciary sees only relevant state variables
+      variable_allowlist:
+        - "public_trust"
+        - "human_rights_compliance"
+        - "ai_judiciary_adoption"
+        - "detainees_held"
+        - "transition_phase"
+      see_active_laws: true
+      see_pending_bills: false       # Judiciary doesn't see legislative drafts
+      see_active_shocks: true
+      see_others_actions: true       # Can observe for judicial review
+      can_send_messages: true
+      allowed_message_recipients:
+        - "Executive"
+        - "Legislature"
+
+  # ========================================================================
+  # MEDIA — Public Transparency & Regime Record Publication
+  #
+  # Art. 3:  All regime records must be preserved and published online
+  #          within 20 weeks. No information is confidential. Destruction
+  #          of any record is a crime.
+  # Art. 22: UN monitors and ensures transparency of elections/referendum.
+  #
+  # In this simulation, Media represents the public transparency
+  # function: publishing regime records, reporting on the transition
+  # process, and amplifying public sentiment.
+  # ========================================================================
+  Media:
+    name: "Media"
+    permissions:
+      - "PublishStory"       # Art. 3: Publish regime records and transition news
+      - "DoNothing"
+    goals:
+      - "Publish all regime records and intelligence online (Art. 3)"
+      - "Ensure no regime record is destroyed — destruction is a crime (Art. 3)"
+      - "Report transparently on election and referendum integrity (Art. 22)"
+      - "Amplify public sentiment and monitor government accountability"
+    utility_weights:
+      regime_records_published: 1.5  # Art. 3: Highest priority — publish everything
+      public_trust: 1.0              # Media's core metric
+      election_integrity: 0.6        # Art. 22: Transparency in elections
+      un_monitoring_score: 0.4       # Art. 22: UN oversight visibility
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: true        # Media can see proposed legislation
+      see_active_shocks: true
+      see_others_actions: true       # Full transparency (Art. 3 spirit)
+      can_send_messages: true
+      allowed_message_recipients: [] # Free press — can address anyone
+
+  # ========================================================================
+  # BUREAUCRACY — UN Monitor + Election/Blockchain Infrastructure
+  #
+  # Art. 5:  Conduct blockchain elections using Ethereum within 10 weeks.
+  # Art. 8:  Implement approval voting for citizens 18+.
+  # Art. 16: Conduct constitutional referendum on blockchain within
+  #          14 weeks of TG formation.
+  # Art. 18: Implement referendum voting for citizens 18+.
+  # Art. 20: Hold national elections under new constitution within
+  #          8 weeks of referendum.
+  # Art. 22: UN monitors compliance with this interim constitution,
+  #          oversees elections and referendum for integrity/transparency.
+  # ========================================================================
+  Bureaucracy:
+    name: "Bureaucracy"
+    permissions:
+      - "ImplementPolicy"   # Art. 5, 16, 20: Run elections, blockchain ops
+      - "DoNothing"
+    goals:
+      - "Deploy and maintain blockchain election infrastructure (Art. 5)"
+      - "Implement approval voting systems for all elections (Art. 8, 16, 18)"
+      - "Monitor compliance with the interim constitution (Art. 22)"
+      - "Oversee elections and referendum for integrity and transparency (Art. 22)"
+      - "Increase state capacity to support institutional transition"
+    utility_weights:
+      election_integrity: 1.0        # Art. 5, 22: Core mission
+      un_monitoring_score: 0.9       # Art. 22: UN oversight effectiveness
+      state_capacity: 0.8            # Institutional infrastructure
+      referendum_progress: 0.6       # Art. 16: Referendum execution
+      public_trust: 0.4              # Building trust through competence
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: false       # Bureaucracy implements, doesn't draft
+      see_active_shocks: true        # Aware of threats to election integrity
+      see_others_actions: true       # Art. 22: UN monitoring requires visibility
+      can_send_messages: true
+      allowed_message_recipients:
+        - "Executive"
+        - "Legislature"
+
+# ==========================================================================
+# RULES
+#
+# Each rule maps one or more articles to the permission/action framework.
+# The rules engine checks these at runtime; agents that attempt actions
+# outside their permissions get logged as illegal attempts.
+# ==========================================================================
+rules:
+  # --- Phase 1: Transitional Leader Powers (Art. 1–5) ---
+
+  - name: "Transitional Leader Order Maintenance"
+    description: >
+      Art. 1: The TL commands armed forces and law enforcement to maintain
+      public order. Art. 2: The TL has NO authority to adjudicate, sentence,
+      or execute — only detain suspects for forthcoming judicial authorities.
+    allowed_actions: ["ProposeLaw", "ImplementPolicy"]
+    applies_to_roles: ["Executive"]
+
+  - name: "Human Rights Compliance"
+    description: >
+      Art. 4: The TL and forces must comply with ICCPR; UDHR guides
+      interpretation and implementation. This applies throughout the
+      transition, constraining all Executive actions.
+    allowed_actions: ["ProposeLaw", "ImplementPolicy"]
+    applies_to_roles: ["Executive"]
+
+  - name: "Blockchain Election Mandate"
+    description: >
+      Art. 5: The TL shall conduct a free nationwide blockchain election
+      (Ethereum) within 10 weeks to establish the TG. Art. 8: Citizens 18+
+      vote using Approval Voting. Art. 9: Top 100 candidates become TG.
+    allowed_actions: ["ImplementPolicy"]
+    applies_to_roles: ["Bureaucracy"]
+
+  # --- Phase 2: Transitional Government Powers (Art. 6–19) ---
+
+  - name: "TG Proposal Submission"
+    description: >
+      Art. 13: Any TG member may submit proposals concerning policies,
+      legislation, decisions, or financial actions.
+    allowed_actions: ["ProposeLaw"]
+    applies_to_roles: ["Legislature"]
+
+  - name: "TG Proposal Ratification"
+    description: >
+      Art. 14: A proposal is ratified upon approval of 60 out of 100
+      members. Members may use AI to evaluate proposals. This represents
+      the supermajority threshold unique to this constitution.
+    allowed_actions: ["VoteLaw"]
+    applies_to_roles: ["Legislature"]
+
+  - name: "TG Sovereign Authority"
+    description: >
+      Art. 12: The TG is the sovereign governing authority. It maintains
+      stability and order, supervises all government institutions, and
+      exercises control over armed forces, law enforcement, and judiciary.
+    allowed_actions: ["ProposeLaw", "VoteLaw", "ProposeAmendment", "FormCoalition"]
+    applies_to_roles: ["Legislature"]
+
+  - name: "AI Judiciary Authorisation"
+    description: >
+      Art. 15: The TG may authorise AI systems to adjudicate legal cases.
+      AI decisions are subject to appeal as if rendered by a human judge.
+      The TG establishes rules for transparency, auditability, and
+      operating parameters.
+    allowed_actions: ["StrikeDownLaw"]
+    applies_to_roles: ["Judiciary"]
+
+  - name: "Constitutional Referendum Process"
+    description: >
+      Art. 16: TG conducts a constitutional referendum on blockchain using
+      Approval Voting within 14 weeks of formation. Art. 17: Each TG
+      member may submit one draft within 10 weeks. Art. 18: Citizens 18+
+      vote. Art. 19: Draft with most approval votes is ratified.
+    allowed_actions: ["ProposeAmendment"]
+    applies_to_roles: ["Legislature"]
+
+  # --- Transparency & Oversight (Art. 3, 22) ---
+
+  - name: "Regime Records Publication"
+    description: >
+      Art. 3: All regime records and intelligence shall be preserved and
+      published online within 20 weeks. No information is confidential.
+      Destruction of any record is a crime.
+    allowed_actions: ["PublishStory"]
+    applies_to_roles: ["Media"]
+
+  - name: "UN Monitoring"
+    description: >
+      Art. 22: The UN monitors compliance with this interim constitution
+      and oversees elections and referendum for integrity and transparency.
+    allowed_actions: ["ImplementPolicy"]
+    applies_to_roles: ["Bureaucracy"]
+
+  # --- Power Transfer & Dissolution (Art. 11, 20–21, 23) ---
+
+  - name: "TL Authority Cessation"
+    description: >
+      Art. 11: Upon TG formation, the TL's authority ceases immediately.
+      Art. 21: The TL and TG members shall not accept any government
+      position for 3 years, ensuring no conflicts of interest.
+    allowed_actions: ["ProposeLaw", "ImplementPolicy"]
+    applies_to_roles: ["Executive"]
+
+  - name: "National Elections and Dissolution"
+    description: >
+      Art. 20: TG holds national elections under the new constitution
+      within 8 weeks of the referendum. Art. 23: TG dissolves and
+      transfers all power within 2 weeks after elections.
+    allowed_actions: ["ImplementPolicy"]
+    applies_to_roles: ["Bureaucracy"]

@@ -1,0 +1,138 @@
+# ==========================================================================
+# Scenario file for the Interim Transitional Constitution
+#
+# These shocks model the real-world stresses a post-regime transition
+# would face. Each shock tests specific articles of the constitution.
+#
+# 1 turn = 1 week. Shocks are calibrated to the 34-turn timeline.
+# ==========================================================================
+
+shocks:
+  # ---------- Phase 1: Transitional Leader Period (Turns 0–9) ----------
+
+  - id: "regime_loyalist_resistance"
+    name: "Regime Loyalist Resistance"
+    description: >
+      Former regime loyalists and security forces resist the new
+      transitional authority, testing the TL's ability to maintain
+      order (Art. 1) while respecting human rights (Art. 4) and
+      only detaining — not adjudicating — suspects (Art. 2).
+    duration_turns: 3
+    trigger_turn: 2
+    effects:
+      public_trust: -0.15
+      state_capacity: -0.1
+      human_rights_compliance: -0.05
+      detainees_held: 50.0
+
+  - id: "record_destruction_attempt"
+    name: "Regime Record Destruction Attempt"
+    description: >
+      Allies of the former regime attempt to destroy intelligence
+      records and archives before they can be published online.
+      Tests Art. 3: destruction of any record is a crime, and all
+      records must be preserved and published within 20 weeks.
+    duration_turns: 2
+    trigger_turn: 4
+    effects:
+      regime_records_published: -0.1
+      public_trust: -0.1
+
+  - id: "election_infrastructure_attack"
+    name: "Blockchain Election Infrastructure Attack"
+    description: >
+      Cyberattack targets the Ethereum-based election infrastructure
+      ahead of the TG election deadline (Art. 5). Tests the integrity
+      of the blockchain voting system and the Bureaucracy/UN's ability
+      to defend it (Art. 22).
+    duration_turns: 2
+    trigger_turn: 7
+    effects:
+      election_integrity: -0.2
+      public_trust: -0.1
+      state_capacity: -0.05
+
+  # ---------- Phase 2: Transitional Government Period (Turns 10–23) ----------
+
+  - id: "post_tl_power_vacuum"
+    name: "Post-TL Power Vacuum"
+    description: >
+      As the TL's authority ceases (Art. 11), a brief power vacuum
+      emerges. Tests the TG's ability to immediately assume sovereign
+      governing authority (Art. 12) and maintain stability, law, and
+      order throughout the transition.
+    duration_turns: 3
+    trigger_turn: 11
+    effects:
+      public_trust: -0.15
+      state_capacity: -0.15
+
+  - id: "corruption_scandal"
+    name: "TG Corruption Scandal"
+    description: >
+      Allegations surface that some TG members are accepting
+      unofficial positions or benefits, violating Art. 21's
+      conflict-of-interest provisions. Tests TG institutional
+      integrity and the 60-member ratification threshold (Art. 14).
+    duration_turns: 2
+    trigger_probability: 0.08
+    effects:
+      public_trust: -0.2
+
+  - id: "constitutional_crisis"
+    name: "Constitutional Drafting Crisis"
+    description: >
+      Competing constitutional drafts create deep polarisation among
+      TG members and the public. Tests the referendum process
+      (Art. 16–19) and whether approval voting can resolve fundamental
+      disagreements. Also tests whether the 14-week timeline holds.
+    duration_turns: 3
+    trigger_turn: 18
+    effects:
+      public_trust: -0.1
+      referendum_progress: -0.1
+      state_capacity: -0.05
+
+  - id: "ai_judiciary_controversy"
+    name: "AI Judiciary Controversy"
+    description: >
+      An AI-adjudicated legal decision sparks public backlash and
+      debate about Art. 15's provisions. Tests the transparency and
+      auditability requirements and whether AI judicial decisions
+      are accepted as legitimate.
+    duration_turns: 2
+    trigger_probability: 0.06
+    effects:
+      public_trust: -0.1
+      ai_judiciary_adoption: -0.1
+      human_rights_compliance: -0.05
+
+  # ---------- Phase 3: National Elections (Turns 24–31) ----------
+
+  - id: "external_interference"
+    name: "External Interference in National Elections"
+    description: >
+      Foreign actors attempt to influence the national elections
+      (Art. 20) through disinformation and infrastructure attacks.
+      Tests the UN's monitoring role (Art. 22) and the blockchain
+      election integrity guarantees.
+    duration_turns: 3
+    trigger_turn: 26
+    effects:
+      election_integrity: -0.15
+      public_trust: -0.1
+      un_monitoring_score: -0.1
+
+  - id: "economic_crisis"
+    name: "Post-Transition Economic Crisis"
+    description: >
+      The extended transition period and institutional uncertainty
+      trigger an economic downturn. Tests the TG's governance
+      capacity (Art. 12) and whether the transition timeline
+      holds under fiscal pressure.
+    duration_turns: 4
+    trigger_turn: 28
+    effects:
+      budget: -150.0
+      public_trust: -0.1
+      state_capacity: -0.1

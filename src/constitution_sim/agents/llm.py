@@ -54,6 +54,8 @@ ACTION_MAP: Dict[str, type] = {
     "Lobby": Lobby,
     "DeclareEmergency": DeclareEmergency,
     "LiftEmergency": LiftEmergency,
+    "FormCoalition": FormCoalition,
+    "ProposeAmendment": ProposeAmendment,
     "DoNothing": DoNothing,
 }
 
@@ -319,17 +321,23 @@ class LLMAgent(BaseAgent):
             f"It is currently the DELIBERATION phase.\n"
             f"You may optionally send messages to other actors to negotiate, threaten, or signal intent.\n"
             f"\n"
-            f"Reply with a JSON list of message objects. If you don't want to send any, return [].\n"
+            f"Reply with a JSON object containing a \"messages\" key whose value is a list of message objects.\n"
+            f"If you don't want to send any messages, return {{\"messages\": []}}.\n"
             f"Message format:\n"
             f"  {{\n"
-            f"    \"recipient\": \"agent_name\" or \"__broadcast__\",\n"
-            f"    \"channel\": \"<one of {channels}>\",\n"
-            f"    \"content\": \"Natural language message...\",\n"
-            f"    \"proposal\": {{\"i_will\": \"...\", \"if_you\": \"...\"}} // Optional\n"
+            f"    \"messages\": [\n"
+            f"      {{\n"
+            f"        \"recipient\": \"agent_name\" or \"__broadcast__\",\n"
+            f"        \"channel\": \"<one of {channels}>\",\n"
+            f"        \"content\": \"Natural language message...\",\n"
+            f"        \"proposal\": {{\"i_will\": \"...\", \"if_you\": \"...\"}} // Optional\n"
+            f"      }}\n"
+            f"    ]\n"
             f"  }}\n"
             f"\n"
-            f"Return ONLY the JSON list. No commentary. No markdown."
+            f"Return ONLY the JSON object. No commentary. No markdown."
         )
+
 
     def _render_memory(self) -> str:
         if not self.memory:
