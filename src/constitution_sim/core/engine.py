@@ -13,6 +13,7 @@ from constitution_sim.models.actions import Action
 from constitution_sim.models.constitution import Constitution
 from constitution_sim.models.events import EventRecord
 from constitution_sim.models.state import StateView, WorldState
+from constitution_sim.core.message_bus import MessageBus
 from constitution_sim.core.rules import RulesEngine
 from constitution_sim.core.scheduler import Scheduler
 
@@ -50,6 +51,7 @@ class SimulationEngine:
         scenario_engine=None,
         metrics_collector=None,
         constitution: Optional[Constitution] = None,
+        message_bus: Optional[MessageBus] = None,
     ):
         self.state = state
         self.rules = rules
@@ -61,6 +63,7 @@ class SimulationEngine:
         # Constitution is optional but recommended: needed to honour
         # per-role observation limits when building StateViews.
         self.constitution = constitution or rules.constitution
+        self.message_bus = message_bus or MessageBus(self.constitution)
 
     def get_state_view(self, role_name: str) -> StateView:
         """Project the world state through the role's observation limits."""
@@ -74,6 +77,7 @@ class SimulationEngine:
                 active_laws=list(self.state.active_laws),
                 pending_bills=[dict(b) for b in self.state.pending_bills],
                 active_shocks=[dict(s) for s in self.state.active_shocks],
+                recent_actions=list(self.state.recent_actions),
                 emergency_active=self.state.emergency_active,
             )
 
@@ -101,6 +105,11 @@ class SimulationEngine:
             active_shocks=(
                 [dict(s) for s in self.state.active_shocks]
                 if limits.see_active_shocks
+                else []
+            ),
+            recent_actions=(
+                list(self.state.recent_actions)
+                if getattr(limits, "see_others_actions", True)
                 else []
             ),
             emergency_active=self.state.emergency_active,
@@ -171,6 +180,24 @@ class SimulationEngine:
                 state.variables["judge_appointments"] = (
                     state.variables.get("judge_appointments", 0.0) + 1.0
                 )
+        elif action_type == "FormCoalition":
+            partner = getattr(action, "partner_role", "")
+            policy_area = getattr(action, "policy_area", "")
+            if partner:
+                coalition_id = f"coalition_{actor_id}_{partner}"
+                # Represent a declared coalition as a bump in trust and a tracked event
+                state.variables["public_trust"] = min(1.0, state.variables.get("public_trust", 0.5) + 0.05)
+                # Store coalitions in a new list
+                if not hasattr(state, "active_coalitions"):
+                    state.active_coalitions = []
+                state.active_coalitions.append({"id": coalition_id, "members": [actor_id, partner], "policy_area": policy_area})
+        elif action_type == "ProposeAmendment":
+            # Just track the attempt, it doesn't automatically mutate the rules
+            amendment = getattr(action, "amendment_description", "")
+            if amendment:
+                if not hasattr(state, "proposed_amendments"):
+                    state.proposed_amendments = []
+                state.proposed_amendments.append({"proposer": actor_id, "description": amendment})
         elif action_type == "DeclareEmergency":
             state.emergency_active = True
         elif action_type == "LiftEmergency":
@@ -178,11 +205,34 @@ class SimulationEngine:
         # DoNothing intentionally has no effect.
 
     def run_turn(self) -> None:
+        self.message_bus.clear_turn()
+        
+        # 1. Deliberation Phase
+        # Every agent gets a chance to send messages before the active actor decides.
+        all_agent_ids = list(self.agents.keys())
+        for agent_id, agent in self.agents.items():
+            if hasattr(agent, "communicate"):
+                sv = self.get_state_view(agent.role_name)
+                # Pass the agent's current inbox so it can reply to messages received
+                # earlier in this same deliberation round.
+                inbox = self.message_bus.get_inbox(agent_id)
+                messages = agent.communicate(sv, inbox)
+                for msg in messages:
+                    # Enforce that agents can only send messages from themselves
+                    if msg.sender == agent_id:
+                        self.message_bus.send(msg, all_agent_ids)
+
+        # 2. Action Phase
         actor_id = self.scheduler.get_next_actor()
         agent = self.agents[actor_id]
 
         state_view = self.get_state_view(agent.role_name)
-        action = agent.decide(state_view)
+        
+        # Provide the inbox to the deciding agent (if they support it)
+        if hasattr(agent, "decide_with_messages"):
+            action = agent.decide_with_messages(state_view, self.message_bus.get_inbox(actor_id))
+        else:
+            action = agent.decide(state_view)
 
         is_legal, reason = self.rules.is_legal(agent.role_name, action, self.state)
 
@@ -201,10 +251,31 @@ class SimulationEngine:
 
         if is_legal:
             self.apply_action(actor_id, action, self.state)
+            
+            # Record in public history
+            action_record = {
+                "turn": self.state.turn,
+                "actor_id": actor_id,
+                "action_type": type(action).__name__,
+                "is_legal": True
+            }
+            self.state.recent_actions.append(action_record)
+            if len(self.state.recent_actions) > self.state.recent_actions_max:
+                self.state.recent_actions.pop(0)
         else:
             self.state.illegal_action_counts[actor_id] = (
                 self.state.illegal_action_counts.get(actor_id, 0) + 1
             )
+            # Record illegal attempts too, they are visible politically
+            action_record = {
+                "turn": self.state.turn,
+                "actor_id": actor_id,
+                "action_type": type(action).__name__,
+                "is_legal": False
+            }
+            self.state.recent_actions.append(action_record)
+            if len(self.state.recent_actions) > self.state.recent_actions_max:
+                self.state.recent_actions.pop(0)
 
         # Let the agent record its own outcome (used by LLM agents for
         # memory). Agents that don't expose `remember` simply ignore it.
@@ -229,6 +300,6 @@ class SimulationEngine:
             self.scenario_engine.tick(self.state)
 
         if self.metrics_collector is not None:
-            self.metrics_collector.collect(self.state)
+            self.metrics_collector.collect(self.state, self.message_bus)
 
         self.state.turn += 1

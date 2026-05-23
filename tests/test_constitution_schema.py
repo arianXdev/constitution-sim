@@ -32,14 +32,14 @@ def test_observation_limits_defaults():
 
 
 def test_load_simple_constitution():
-    c = load_constitution(Path("examples/simple_constitution.yaml"))
+    c = load_constitution(Path("constitutions/simple_constitution.yaml"))
     assert c.name == "Simple Constitution"
     assert set(c.roles) == {"Executive", "Legislature"}
     assert "ProposeLaw" in c.roles["Executive"].permissions
 
 
 def test_load_advanced_constitution_has_utilities_and_limits():
-    c = load_constitution(Path("examples/advanced_constitution.yaml"))
+    c = load_constitution(Path("constitutions/advanced_constitution.yaml"))
     assert c.allow_emergency_powers is True
     assert c.roles["Executive"].utility_weights["public_trust"] == 1.0
     assert c.roles["Bureaucracy"].observation_limits.see_pending_bills is False
@@ -50,7 +50,7 @@ def test_load_advanced_constitution_has_utilities_and_limits():
 
 
 def test_initial_state_loads_from_yaml():
-    c = load_constitution(Path("examples/advanced_constitution.yaml"))
+    c = load_constitution(Path("constitutions/advanced_constitution.yaml"))
     assert c.initial_state.variables["public_trust"] == 0.5
     assert c.initial_state.variables["state_capacity"] == 0.5
     assert c.initial_state.variables["budget"] == 1000.0

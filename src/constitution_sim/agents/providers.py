@@ -22,24 +22,23 @@ logger = logging.getLogger(__name__)
 DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 
-_JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
+_JSON_RE = re.compile(r"(\{.*\}|\[.*\])", re.DOTALL)
 
-
-def _extract_json_object(text: str) -> str:
-    """Pull the first JSON object out of a possibly-noisy LLM response."""
+def _extract_json(text: str) -> str:
+    """Pull the first JSON object or array out of a possibly-noisy LLM response."""
     if not text:
         return "{}"
     try:
         json.loads(text)
         return text
     except json.JSONDecodeError:
-        match = _JSON_OBJECT_RE.search(text)
+        match = _JSON_RE.search(text)
         if match:
             return match.group(0)
     return text  # let downstream parser raise so caller can fall back
 
 
-def get_openai_callable(model: str = DEFAULT_OPENAI_MODEL) -> Callable[[str], str]:
+def get_openai_callable(model: str = DEFAULT_OPENAI_MODEL) -> Callable[[str, str], str]:
     """Build a callable that sends `prompt` to OpenAI and returns the JSON text."""
     import openai
 
@@ -52,18 +51,13 @@ def get_openai_callable(model: str = DEFAULT_OPENAI_MODEL) -> Callable[[str], st
         )
     client = openai.OpenAI(api_key=api_key)
 
-    def call_llm(prompt: str) -> str:
-        # response_format=json_object requires the word "JSON" in the prompt;
-        # _build_prompt already includes it but we re-affirm here.
+    def call_llm(prompt: str, system_prompt: str = "Reply with JSON.") -> str:
         response = client.chat.completions.create(
             model=model,
             messages=[
                 {
                     "role": "system",
-                    "content": (
-                        "You are a political-agent policy module. Reply with a "
-                        "single JSON object describing one action. No prose."
-                    ),
+                    "content": system_prompt,
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -75,7 +69,7 @@ def get_openai_callable(model: str = DEFAULT_OPENAI_MODEL) -> Callable[[str], st
     return call_llm
 
 
-def get_anthropic_callable(model: str = DEFAULT_ANTHROPIC_MODEL) -> Callable[[str], str]:
+def get_anthropic_callable(model: str = DEFAULT_ANTHROPIC_MODEL) -> Callable[[str, str], str]:
     """Build a callable that sends `prompt` to Anthropic and returns JSON text."""
     import anthropic
 
@@ -88,22 +82,19 @@ def get_anthropic_callable(model: str = DEFAULT_ANTHROPIC_MODEL) -> Callable[[st
         )
     client = anthropic.Anthropic(api_key=api_key)
 
-    def call_llm(prompt: str) -> str:
+    def call_llm(prompt: str, system_prompt: str = "Reply with JSON.") -> str:
         response = client.messages.create(
             model=model,
             max_tokens=1024,
             temperature=0.0,
-            system=(
-                "You are a political-agent policy module. Reply with a single "
-                "JSON object describing one action. Output ONLY the JSON."
-            ),
+            system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
         # Anthropic returns a list of content blocks; pick the first text block.
         for block in response.content:
             text = getattr(block, "text", None)
             if text:
-                return _extract_json_object(text)
+                return _extract_json(text)
         return "{}"
 
     return call_llm

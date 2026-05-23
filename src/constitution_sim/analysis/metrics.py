@@ -46,7 +46,7 @@ class MetricsCollector:
         """Sum of illegal-action counts (cheap proxy for corruption pressure)."""
         return float(sum(state.illegal_action_counts.values()))
 
-    def collect(self, state: WorldState) -> None:
+    def collect(self, state: WorldState, message_bus: Any = None) -> None:
         trust = state.variables.get("public_trust", 0.5)
         volatility = abs(trust - self._prev_trust)
         self._prev_trust = trust
@@ -63,6 +63,9 @@ class MetricsCollector:
             "corruption_proxy": self._corruption_proxy(state),
             "emergency_active": int(state.emergency_active),
             "emergency_turns": state.emergency_turns,
+            "communication_volume": len(message_bus.get_turn_log()) if message_bus else 0,
+            "active_coalitions": len(getattr(state, "active_coalitions", [])),
+            "proposed_amendments": len(getattr(state, "proposed_amendments", [])),
         }
         for k, v in state.variables.items():
             metrics[k] = v

@@ -29,9 +29,9 @@ jobs:
 
       - name: Smoke-test CLI
         run: |
-          constitution-sim validate --constitution examples/simple_constitution.yaml
-          constitution-sim validate --constitution examples/advanced_constitution.yaml
-          constitution-sim validate --constitution examples/strong_executive_constitution.yaml
+          constitution-sim validate --constitution constitutions/simple_constitution.yaml
+          constitution-sim validate --constitution constitutions/advanced_constitution.yaml
+          constitution-sim validate --constitution constitutions/strong_executive_constitution.yaml
 
       - name: Run pytest
         run: pytest -q

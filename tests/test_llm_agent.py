@@ -30,7 +30,7 @@ def test_llm_agent_no_callable_falls_back_to_heuristic():
 
 
 def test_llm_agent_parses_structured_output():
-    def mock_llm(prompt: str) -> str:
+    def mock_llm(prompt: str, system_prompt: str = "") -> str:
         return json.dumps({"action_type": "DoNothing", "action_data": {}})
 
     agent = LLMAgent(
@@ -46,7 +46,7 @@ def test_llm_agent_parses_structured_output():
 def test_llm_agent_rejects_disallowed_action_and_falls_back():
     """LLM tries to vote when role can only DoNothing or ProposeLaw — must fall back."""
 
-    def mock_llm(prompt: str) -> str:
+    def mock_llm(prompt: str, system_prompt: str = "") -> str:
         return json.dumps(
             {"action_type": "VoteLaw", "action_data": {"law_id": "x", "vote": True}}
         )
@@ -75,7 +75,7 @@ def test_llm_agent_memory_is_populated_by_engine():
 
 
 def test_evaluator_runs_with_llm_mock_factory(tmp_path):
-    constitution = load_constitution(Path("examples/advanced_constitution.yaml"))
+    constitution = load_constitution(Path("constitutions/advanced_constitution.yaml"))
     shocks = [
         Shock(
             id="1",

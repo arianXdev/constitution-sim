@@ -23,6 +23,7 @@ from typing import Callable, Deque, Dict, List, Optional, Tuple
 
 from constitution_sim.agents.base import BaseAgent
 from constitution_sim.agents.heuristics import DeterministicHeuristicAgent
+from constitution_sim.models.messages import Message, DealProposal, MESSAGE_CHANNELS
 from constitution_sim.models.actions import (
     Action,
     DeclareEmergency,
@@ -35,6 +36,8 @@ from constitution_sim.models.actions import (
     StrikeDownLaw,
     VetoLaw,
     VoteLaw,
+    FormCoalition,
+    ProposeAmendment,
 )
 from constitution_sim.models.state import StateView
 
@@ -106,7 +109,7 @@ class LLMAgent(BaseAgent):
         self,
         agent_id: str,
         role_name: str,
-        llm_callable: Optional[Callable[[str], str]] = None,
+        llm_callable: Optional[Callable[[str, str], str]] = None,
         fallback_seed: int = 42,
         goals: Optional[List[str]] = None,
         utility_weights: Optional[Dict[str, float]] = None,
@@ -141,13 +144,25 @@ class LLMAgent(BaseAgent):
     # ----- decision -------------------------------------------------------
 
     def decide(self, state_view: StateView) -> Action:
+        return self.decide_with_messages(state_view, [])
+
+    def decide_with_messages(self, state_view: StateView, inbox: List[Message]) -> Action:
         if self.llm_callable is None:
             return self.fallback_agent.decide(state_view)
 
-        prompt = self._build_prompt(state_view)
+        prompt = self._build_prompt(state_view, inbox)
+        system_prompt = (
+            "You are a political-agent policy module. Reply with a single "
+            "JSON object describing your reasoning and one action. No prose."
+        )
         try:
-            response_text = self.llm_callable(prompt)
+            response_text = self.llm_callable(prompt, system_prompt)
             parsed = json.loads(response_text)
+
+            # Extract reasoning (not used for rules, but good for logs/research)
+            reasoning = parsed.get("reasoning", "")
+            if reasoning:
+                logger.debug("[%s] Reasoning: %s", self.agent_id, reasoning)
 
             action_type = parsed.get("action_type")
             action_data = parsed.get("action_data", {}) or {}
@@ -170,13 +185,58 @@ class LLMAgent(BaseAgent):
             )
             return self.fallback_agent.decide(state_view)
 
+    # ----- communication -------------------------------------------------
+
+    def communicate(self, state_view: StateView, inbox: List[Message]) -> List[Message]:
+        """Deliberation phase: generate messages to send to other agents."""
+        if self.llm_callable is None:
+            return []  # Fallback agent handles its own comms later
+
+        prompt = self._build_communication_prompt(state_view, inbox)
+        system_prompt = (
+            "You are a political-agent policy module in a deliberation phase. "
+            "Reply with a JSON list of messages to send. No prose."
+        )
+        try:
+            response_text = self.llm_callable(prompt, system_prompt)
+            parsed = json.loads(response_text)
+            if not isinstance(parsed, list):
+                if isinstance(parsed, dict) and "messages" in parsed:
+                    parsed = parsed["messages"]
+                else:
+                    return []
+
+            messages = []
+            for m_data in parsed:
+                # Fill in sender and turn automatically
+                m_data["sender"] = self.agent_id
+                m_data["turn"] = state_view.turn
+                try:
+                    messages.append(Message(**m_data))
+                except Exception as e:
+                    logger.warning("[%s] Failed to parse message: %s", self.agent_id, e)
+            return messages
+        except Exception as exc:
+            logger.warning("[%s] LLM communication failed (%s).", self.agent_id, exc)
+            return []
+
     # ----- prompt construction -------------------------------------------
 
-    def _build_prompt(self, state_view: StateView) -> str:
+    def _build_base_context(self, state_view: StateView) -> str:
         persona = ROLE_PERSONAS.get(
             self.role_name, "You are a political actor in a simulated state."
         )
         memory_block = self._render_memory()
+        
+        # Format recent actions (political history)
+        recent_actions_text = "(none visible)"
+        if state_view.recent_actions:
+            lines = []
+            for a in state_view.recent_actions[-10:]: # just the last 10 for brevity
+                ok = "OK" if a['is_legal'] else "REJECTED"
+                lines.append(f"  Turn {a['turn']}: {a['actor_id']} attempted {a['action_type']} [{ok}]")
+            recent_actions_text = "\n".join(lines)
+
         return (
             f"You are simulating the {self.role_name} of the country governed "
             f"by '{self.constitution_name}'.\n"
@@ -196,12 +256,40 @@ class LLMAgent(BaseAgent):
             f"  active_shocks:   {state_view.active_shocks}\n"
             f"  emergency_active: {state_view.emergency_active}\n"
             f"\n"
+            f"Recent public actions by other actors:\n{recent_actions_text}\n"
+            f"\n"
             f"{memory_block}"
+        )
+
+    def _format_inbox(self, inbox: List[Message]) -> str:
+        if not inbox:
+            return "Messages received this turn: (none)\n"
+        lines = ["Messages received this turn:"]
+        for m in inbox:
+            channel = m.channel.upper()
+            sender = m.sender
+            lines.append(f"  From {sender} [{channel}]: {m.content}")
+            if m.proposal:
+                lines.append(f"    PROPOSAL: I will {m.proposal.i_will} if you {m.proposal.if_you}")
+        return "\n".join(lines) + "\n"
+
+    def _build_prompt(self, state_view: StateView, inbox: List[Message]) -> str:
+        base = self._build_base_context(state_view)
+        inbox_text = self._format_inbox(inbox)
+        
+        return (
+            f"{base}\n"
+            f"{inbox_text}\n"
+            f"It is now your turn to ACT.\n"
             f"You may pick ONE of these typed actions (and only these):\n"
             f"  {self.allowed_actions}\n"
             f"\n"
             f"Reply with a single JSON object of the form:\n"
-            f'  {{"action_type": "<one of the above>", "action_data": {{...}}}}\n'
+            f"  {{\n"
+            f"    \"reasoning\": \"Explain your strategic reasoning briefly here...\",\n"
+            f"    \"action_type\": \"<one of the above>\",\n"
+            f"    \"action_data\": {{...}}\n"
+            f"  }}\n"
             f"\n"
             f"Action_data shapes by action_type:\n"
             f'  ProposeLaw       => {{"law_id": "law_X", "content": "..."}}\n'
@@ -211,11 +299,36 @@ class LLMAgent(BaseAgent):
             f'  PublishStory     => {{"headline": "...", "sentiment": -1.0..1.0}}\n'
             f'  ImplementPolicy  => {{"policy_name": "...", "efficiency": 0.0..1.0}}\n'
             f'  Lobby            => {{"law_id": "law_X", "support": true|false, "intensity": 0.0..1.0}}\n'
+            f'  FormCoalition    => {{"partner_role": "...", "policy_area": "..."}}\n'
+            f'  ProposeAmendment => {{"amendment_description": "...", "target_rule": "..."}}\n'
             f'  DeclareEmergency => {{"reason": "..."}}\n'
             f'  LiftEmergency    => {{"reason": "..."}}\n'
             f'  DoNothing        => {{}}\n'
             f"\n"
             f"Return ONLY the JSON object. No commentary. No markdown."
+        )
+
+    def _build_communication_prompt(self, state_view: StateView, inbox: List[Message]) -> str:
+        base = self._build_base_context(state_view)
+        inbox_text = self._format_inbox(inbox)
+        channels = list(MESSAGE_CHANNELS)
+        
+        return (
+            f"{base}\n"
+            f"{inbox_text}\n"
+            f"It is currently the DELIBERATION phase.\n"
+            f"You may optionally send messages to other actors to negotiate, threaten, or signal intent.\n"
+            f"\n"
+            f"Reply with a JSON list of message objects. If you don't want to send any, return [].\n"
+            f"Message format:\n"
+            f"  {{\n"
+            f"    \"recipient\": \"agent_name\" or \"__broadcast__\",\n"
+            f"    \"channel\": \"<one of {channels}>\",\n"
+            f"    \"content\": \"Natural language message...\",\n"
+            f"    \"proposal\": {{\"i_will\": \"...\", \"if_you\": \"...\"}} // Optional\n"
+            f"  }}\n"
+            f"\n"
+            f"Return ONLY the JSON list. No commentary. No markdown."
         )
 
     def _render_memory(self) -> str:

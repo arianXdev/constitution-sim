@@ -4,7 +4,7 @@ from constitution_sim.app.cli import _resolve_agent_type, main
 
 
 def test_cli_validate_simple_ok(capsys):
-    rc = main(["validate", "--constitution", "examples/simple_constitution.yaml"])
+    rc = main(["validate", "--constitution", "constitutions/simple_constitution.yaml"])
     assert rc == 0
     captured = capsys.readouterr().out
     assert "Simple Constitution" in captured
@@ -22,7 +22,7 @@ def test_cli_run_single(tmp_path):
         [
             "run",
             "--constitution",
-            "examples/simple_constitution.yaml",
+            "constitutions/simple_constitution.yaml",
             "--turns",
             "4",
             "--seed",
@@ -50,7 +50,7 @@ def test_cli_backcompat_without_subcommand(tmp_path):
     rc = main(
         [
             "--constitution",
-            "examples/simple_constitution.yaml",
+            "constitutions/simple_constitution.yaml",
             "--turns",
             "2",
             "--log",
@@ -70,7 +70,7 @@ def test_cli_replay(tmp_path, capsys):
         [
             "run",
             "--constitution",
-            "examples/simple_constitution.yaml",
+            "constitutions/simple_constitution.yaml",
             "--turns",
             "3",
             "--log",
@@ -119,9 +119,9 @@ def test_cli_compare(tmp_path, capsys):
         [
             "run",
             "--constitution",
-            "examples/advanced_constitution.yaml",
+            "constitutions/advanced_constitution.yaml",
             "--scenario",
-            "examples/scenario.yaml",
+            "constitutions/scenario.yaml",
             "--turns",
             "5",
             "--runs",
@@ -142,9 +142,9 @@ def test_cli_compare(tmp_path, capsys):
         [
             "run",
             "--constitution",
-            "examples/strong_executive_constitution.yaml",
+            "constitutions/strong_executive_constitution.yaml",
             "--scenario",
-            "examples/scenario.yaml",
+            "constitutions/scenario.yaml",
             "--turns",
             "5",
             "--runs",

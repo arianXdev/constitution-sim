@@ -1,0 +1,95 @@
+name: "Authoritarian Junta"
+version: "1.0"
+description: >
+  A highly restrictive constitution where power is concentrated in the Executive,
+  communication is heavily restricted, and other roles have limited visibility
+  and influence.
+
+initial_state:
+  variables:
+    public_trust: 0.3
+    budget: 2000.0
+    state_capacity: 0.8
+    authoritarian_control: 0.9
+
+allow_emergency_powers: true
+
+roles:
+  Executive:
+    name: "Executive"
+    permissions:
+      - "ProposeLaw"
+      - "DeclareEmergency"
+      - "LiftEmergency"
+      - "ImplementPolicy"
+      - "AppointJudge"
+      - "DoNothing"
+    goals:
+      - "Maintain absolute order and stability."
+      - "Consolidate power and marginalize opposition."
+    utility_weights:
+      authoritarian_control: 1.5
+      state_capacity: 1.0
+      public_trust: 0.2
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: true
+      see_active_shocks: true
+      see_others_actions: true
+      can_send_messages: true
+      allowed_message_recipients: [] # Can talk to anyone
+
+  Judiciary:
+    name: "Judiciary"
+    permissions:
+      - "StrikeDownLaw"
+      - "DoNothing"
+    goals:
+      - "Survive the regime."
+    utility_weights:
+      authoritarian_control: -0.5
+      public_trust: 0.5
+    observation_limits:
+      see_variables: true
+      see_active_laws: true
+      see_pending_bills: false
+      see_active_shocks: true
+      see_others_actions: false # Blind to political history
+      can_send_messages: false  # Gag order on judges
+      allowed_message_recipients: []
+
+  Media:
+    name: "Media"
+    permissions:
+      - "PublishStory"
+      - "DoNothing"
+    goals:
+      - "Publish state-approved narratives."
+    utility_weights:
+      authoritarian_control: 1.0
+    observation_limits:
+      see_variables: true
+      variable_allowlist: ["public_trust", "state_capacity"] # Cannot see authoritarian_control
+      see_active_laws: true
+      see_pending_bills: false
+      see_active_shocks: false
+      see_others_actions: false
+      can_send_messages: true
+      allowed_message_recipients: ["Executive"] # Can only talk to Executive censors
+
+rules:
+  - name: "Executive Supremacy"
+    description: "The Executive has broad powers and cannot be easily checked."
+    allowed_actions: ["ProposeLaw", "DeclareEmergency", "LiftEmergency", "ImplementPolicy", "AppointJudge"]
+    applies_to_roles: ["Executive"]
+
+  - name: "Judicial Review (Restricted)"
+    description: "Judges can strike down laws, but are effectively gagged from communicating."
+    allowed_actions: ["StrikeDownLaw"]
+    applies_to_roles: ["Judiciary"]
+
+  - name: "State Media"
+    description: "The Media is an arm of the state."
+    allowed_actions: ["PublishStory"]
+    applies_to_roles: ["Media"]

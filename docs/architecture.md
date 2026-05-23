@@ -43,8 +43,10 @@ src/constitution_sim/
     state.py           WorldState (canonical) and StateView (per-role projection)
     actions.py         Typed action classes
     events.py          EventRecord (one row per logged decision)
+    messages.py        Message and DealProposal models for inter-agent communication
   core/
     engine.py          SimulationEngine + EventLogger
+    message_bus.py     MessageBus (handles message routing and filters)
     rules.py           RulesEngine (legality decisions + reasons)
     scheduler.py       Round-robin scheduler
   agents/
@@ -76,31 +78,32 @@ src/constitution_sim/
                    \              /
                     \            /
                   SimulationEngine ----> EventLogger (.jsonl)
-                    /     |     \
-                   /      |      \
-            Scheduler  Agents  MetricsCollector
-                          |          \
-                       StateView      DataFrame ----> plots + compare
+                  /   |    |    \
+                 /    |    |     \
+         Scheduler Messages Agents MetricsCollector
+                           |          \
+                        StateView      DataFrame ----> plots + compare
 ```
 
 Per turn:
 
-1. `Scheduler.get_next_actor()` returns an `actor_id`.
-2. `SimulationEngine.get_state_view(role_name)` builds a partial view
-   that respects the role's `ObservationLimits`.
-3. The agent's `decide(state_view)` returns a typed `Action`.
-4. `RulesEngine.is_legal(role, action, state)` returns
+1. **Deliberation Phase**: All agents generate messages (`communicate()`) which are routed via the `MessageBus`.
+2. `Scheduler.get_next_actor()` returns an `actor_id`.
+3. `SimulationEngine.get_state_view(role_name)` builds a partial view
+   that respects the role's `ObservationLimits`, including the public political history.
+4. The agent's `decide_with_messages(state_view, inbox)` returns a typed `Action`.
+5. `RulesEngine.is_legal(role, action, state)` returns
    `(bool, reason)`. The reason is always stored.
-5. `EventLogger.log(EventRecord)` records the attempt — legal or not.
-6. If legal, `SimulationEngine.apply_action(actor_id, action, state)`
-   mutates the `WorldState`.
-7. The engine calls `agent.remember(turn, action_type, is_legal)` so
+6. `EventLogger.log(EventRecord)` records the attempt — legal or not.
+7. If legal, `SimulationEngine.apply_action(actor_id, action, state)`
+   mutates the `WorldState` and records the public action in `state.recent_actions`.
+8. The engine calls `agent.remember(turn, action_type, is_legal)` so
    agents that maintain memory (LLM) can see their own history next
    turn.
-8. `ScenarioEngine.tick(state)` ages active shocks and triggers new
+9. `ScenarioEngine.tick(state)` ages active shocks and triggers new
    ones.
-9. `MetricsCollector.collect(state)` snapshots metrics.
-10. Turn counter increments.
+10. `MetricsCollector.collect(state)` snapshots metrics.
+11. Turn counter increments.
 
 ## Agent cognition
 
@@ -115,6 +118,8 @@ a prompt that includes:
 - The **constitution context**: name, description, list of other roles.
 - The agent's declared **goals** and **utility weights** from the YAML.
 - A **filtered state view** (per-role observation limits applied).
+- **Public political history**: recently executed actions by all actors (if permitted).
+- **Inbox**: messages sent by other actors during the current turn's deliberation phase.
 - A **rolling memory** of the agent's own recent decisions and whether
   they were legal.
 - The **exact set of typed actions** the role is allowed to return.
@@ -144,7 +149,7 @@ All randomness flows through a single seeded `random.Random` per agent
 
 `Role.observation_limits` (`ObservationLimits`) controls what fields of
 the `WorldState` flow into the agent's `StateView`. Examples in
-`examples/advanced_constitution.yaml`:
+`constitutions/advanced_constitution.yaml`:
 
 - Bureaucracy: `see_pending_bills: false` — bureaucrats don't see
   drafts.
@@ -167,6 +172,8 @@ The `MetricsCollector` snapshots per turn:
 | corruption_proxy    | total illegal-action attempts                               |
 | emergency_active    | 1 if a state of emergency is currently active               |
 | emergency_turns     | cumulative turns spent under emergency powers               |
+| communication_volume| number of messages sent over the message bus                |
+| active_coalitions   | number of formally declared coalitions                      |
 
 Plus the raw `state.variables` and counts of laws / bills / shocks.
 

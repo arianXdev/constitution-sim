@@ -86,6 +86,20 @@ class LiftEmergency(Action):
     reason: str = ""
 
 
+class FormCoalition(Action):
+    """Publicly declare a coalition alignment with another role."""
+
+    partner_role: str
+    policy_area: str
+
+
+class ProposeAmendment(Action):
+    """Propose a constitutional amendment (meta-action)."""
+
+    amendment_description: str
+    target_rule: str
+
+
 class DoNothing(Action):
     """Explicit no-op — useful for actors with no legal/useful move."""
 

@@ -54,7 +54,7 @@ works in both modes.
 
 ```bash
 constitution-sim run \
-  --constitution examples/simple_constitution.yaml \
+  --constitution constitutions/simple_constitution.yaml \
   --turns 6 \
   --log /tmp/my_first_run.jsonl
 ```
@@ -95,8 +95,8 @@ First events:
 
 ```bash
 constitution-sim run \
-  --constitution examples/advanced_constitution.yaml \
-  --scenario     examples/scenario.yaml \
+  --constitution constitutions/advanced_constitution.yaml \
+  --scenario     constitutions/scenario.yaml \
   --turns 30 --runs 5 --seed 42 \
   --log         /tmp/cs/events.jsonl \
   --metrics-out /tmp/cs/metrics.csv \
@@ -112,14 +112,14 @@ shocks firing in the middle, and `.png` plots written to
 
 ```bash
 # Run A: balanced (advanced)
-constitution-sim run --constitution examples/advanced_constitution.yaml \
-  --scenario examples/scenario.yaml --turns 12 --runs 3 --seed 11 \
+constitution-sim run --constitution constitutions/advanced_constitution.yaml \
+  --scenario constitutions/scenario.yaml --turns 12 --runs 3 --seed 11 \
   --log /tmp/A/events.jsonl --metrics-out /tmp/A/metrics.csv \
   --plot-dir /tmp/A/plots
 
 # Run B: power-grab (strong executive)
-constitution-sim run --constitution examples/strong_executive_constitution.yaml \
-  --scenario examples/scenario.yaml --turns 12 --runs 3 --seed 11 \
+constitution-sim run --constitution constitutions/strong_executive_constitution.yaml \
+  --scenario constitutions/scenario.yaml --turns 12 --runs 3 --seed 11 \
   --log /tmp/B/events.jsonl --metrics-out /tmp/B/metrics.csv \
   --plot-dir /tmp/B/plots
 
@@ -146,7 +146,7 @@ back. That's the framework working.
 
 ## 8. Editing a constitution
 
-Open `examples/simple_constitution.yaml`. The structure:
+Open `constitutions/simple_constitution.yaml`. The structure:
 
 ```yaml
 name: "My Constitution"
@@ -203,12 +203,12 @@ Knobs you can turn:
 After editing, validate:
 
 ```bash
-constitution-sim validate --constitution examples/my_constitution.yaml
+constitution-sim validate --constitution constitutions/my_constitution.yaml
 ```
 
 ## 9. Editing a scenario
 
-`examples/scenario.yaml` lists *shocks* — sudden events that nudge the
+`constitutions/scenario.yaml` lists *shocks* — sudden events that nudge the
 world's variables:
 
 ```yaml
@@ -266,7 +266,7 @@ columns:
 
 ## 12. Five experiments to try this weekend
 
-1. **The dictator test.** Use `examples/strong_executive_constitution.yaml`.
+1. **The dictator test.** Use `constitutions/strong_executive_constitution.yaml`.
    Watch `power_concentration` climb above 0.9. Then in the YAML, add
    `StrikeDownLaw` back to the Judiciary's `permissions` — re-run and
    watch it drop.
@@ -307,12 +307,12 @@ exactly why the rules engine rejected it.
 
 ```bash
 # Validate
-constitution-sim validate --constitution examples/advanced_constitution.yaml
+constitution-sim validate --constitution constitutions/advanced_constitution.yaml
 
 # One quick AI-powered simulation (auto-picks LLM if a key is set)
 constitution-sim run \
-  --constitution examples/advanced_constitution.yaml \
-  --scenario     examples/scenario.yaml \
+  --constitution constitutions/advanced_constitution.yaml \
+  --scenario     constitutions/scenario.yaml \
   --turns 10 --log /tmp/quick.jsonl
 
 # Force the heuristic agent (deterministic, no API needed)

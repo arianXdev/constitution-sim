@@ -18,8 +18,8 @@ from constitution_sim.scenarios.engine import ScenarioEngine
 
 
 def test_advanced_constitution_with_scenario(tmp_path: Path):
-    constitution = load_constitution(Path("examples/advanced_constitution.yaml"))
-    shocks = load_shocks(Path("examples/scenario.yaml"))
+    constitution = load_constitution(Path("constitutions/advanced_constitution.yaml"))
+    shocks = load_shocks(Path("constitutions/scenario.yaml"))
 
     state = WorldState(variables=dict(constitution.initial_state.variables))
     rules = RulesEngine(constitution)

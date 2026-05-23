@@ -33,15 +33,11 @@ so the project also runs offline / in CI / with zero API keys.
   Judiciary, Media, Bureaucracy) gets its own LLM system prompt. The
   Executive is ambitious; the Judiciary is reactive; the Media chases a
   narrative; the Bureaucracy implements steadily.
-- **Agent memory.** Each agent sees its own recent decisions (turn,
-  action, legal or not) so it can reason about continuity.
-- **Schema-driven constitutions.** Strict Pydantic v2 models; YAML in,
-  typed objects out. Errors are explicit and structured.
-- **Rules engine is source of truth.** Agents propose typed actions;
-  the engine accepts or rejects with a reason. The LLM cannot mutate
-  state directly.
-- **Partial observability.** Each role gets a state view filtered by
-  its `observation_limits`.
+- **Agent memory & shared history.** Each agent remembers its own recent decisions and can see a public history of what other actors just did (if the constitution allows).
+- **Inter-agent deliberation.** Each turn features a deliberation phase where agents can negotiate, threaten, or signal intent by sending messages to each other's inboxes.
+- **Schema-driven constitutions.** Strict Pydantic v2 models; YAML in, typed objects out. Constitutions can enforce communication limits (e.g. authoritarian gag orders).
+- **Rules engine is source of truth.** Agents propose typed actions; the engine accepts or rejects with a reason. The LLM cannot mutate state directly.
+- **Partial observability.** Each role gets a state view filtered by its `observation_limits`.
 - **Institutional metrics.** Power concentration, deadlock, trust
   volatility, legitimacy, corruption pressure, emergency-power drift.
 - **Repeated-run evaluation harness.** Multi-seed runs with pandas /
@@ -90,8 +86,8 @@ This exposes a `constitution-sim` console entry point.
 ```bash
 export OPENAI_API_KEY=sk-...
 constitution-sim run \
-  --constitution examples/advanced_constitution.yaml \
-  --scenario     examples/scenario.yaml \
+  --constitution constitutions/advanced_constitution.yaml \
+  --scenario     constitutions/scenario.yaml \
   --turns 20 --seed 42 \
   --log         /tmp/cs/events.jsonl \
   --metrics-out /tmp/cs/metrics.csv
@@ -119,12 +115,12 @@ constitution-sim run --agent-type heuristic ...
 
 ```bash
 # 1. Validate a constitution YAML against the schema.
-constitution-sim validate --constitution examples/advanced_constitution.yaml
+constitution-sim validate --constitution constitutions/advanced_constitution.yaml
 
 # 2. Run a simulation (single seed or multi-seed evaluation).
 constitution-sim run \
-  --constitution examples/advanced_constitution.yaml \
-  --scenario     examples/scenario.yaml \
+  --constitution constitutions/advanced_constitution.yaml \
+  --scenario     constitutions/scenario.yaml \
   --turns 30 --runs 5 --seed 42 \
   --log         /tmp/cs/events.jsonl \
   --metrics-out /tmp/cs/metrics.csv \
@@ -145,8 +141,9 @@ For each turn, the LLM agent is prompted with:
 - The constitution's name, description, and the list of other roles.
 - Its own declared goals and utility weights (from the YAML).
 - A partial state view filtered by its `observation_limits`.
-- A short memory of its own recent decisions (and whether they were
-  legal).
+- **Public political history**: recent public actions taken by all actors.
+- **Inbox messages**: any negotiation/signals received during the turn's deliberation phase.
+- A short memory of its own recent decisions (and whether they were legal).
 - The exact set of typed actions it's allowed to return.
 
 It replies with one JSON object describing a single action. If the LLM
@@ -164,7 +161,7 @@ src/constitution_sim/
   scenarios/     Shock model + ScenarioEngine
   analysis/      MetricsCollector, Evaluator, plot
   app/           CLI (validate / run / replay / compare)
-examples/
+constitutions/
   simple_constitution.yaml
   advanced_constitution.yaml
   strong_executive_constitution.yaml
@@ -219,7 +216,5 @@ like I'm 10" walkthrough.
 This is an MVP, not a finished research instrument. The following are
 explicit non-goals at this stage:
 
-- Multi-actor coalition formation / strategic communication.
-- Persistent economic/demographic simulation (state variables are
-  scalars, not vector economies).
+- Persistent economic/demographic simulation (state variables are scalars, not vector economies).
 - Fine-tuned LLMs or RL self-play.

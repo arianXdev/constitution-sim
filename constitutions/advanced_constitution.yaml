@@ -1,5 +1,5 @@
 # Five-branch constitution exercising every role in the system. Use this
-# (paired with examples/scenario.yaml) to see the full simulation surface.
+# (paired with constitutions/scenario.yaml) to see the full simulation surface.
 name: "Advanced Constitution"
 version: "2.0"
 description: "Executive + Legislature + Judiciary + Media + Bureaucracy."

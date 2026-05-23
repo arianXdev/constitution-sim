@@ -41,6 +41,11 @@ class ObservationLimits(BaseModel):
     # see_variables is True). Concrete role configs can pick which
     # state variables a role is allowed to observe.
     variable_allowlist: List[str] = Field(default_factory=list)
+    # Communication and interaction limits
+    see_others_actions: bool = True
+    can_send_messages: bool = True
+    # Empty list = can message anyone. Otherwise, list of role names.
+    allowed_message_recipients: List[str] = Field(default_factory=list)
 
 
 class Role(BaseModel):
